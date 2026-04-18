@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ForgeSight — Hack Malenadu 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── TOPBAR ── -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 2L13 5V11L8 14L3 11V5L8 2Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M8 6L10 7.5V10.5L8 12L6 10.5V7.5L8 6Z" fill="white"/>
+        </svg>
+      </div>
+      <span class="logo-text">ForgeSight</span>
+      <span class="logo-tag">v3.0 · Hack Malenadu 2026</span>
+    </div>
+    <div class="topbar-right">
+      <span class="api-url" id="apiUrl">API: http://localhost:8000</span>
+      <div class="live-badge" id="liveBadge">
+        <div class="pulse-dot"></div>
+        CONNECTING…
+      </div>
+      <div class="system-health health-gray" id="systemHealthBadge">SYSTEM: —</div>
+    </div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <div class="main">
+
+    <!-- ── SIDEBAR ── -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Machines</div>
+        <div id="machineList">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Fleet Overview</div>
+        <div class="fleet-box">
+          <div class="footer-stat">
+            <span class="footer-stat-label">Machines Online</span>
+            <span class="footer-stat-val" id="machinesOnline">0 / 4</span>
+          </div>
+          <div class="footer-stat">
+            <span class="footer-stat-label">Active Alerts</span>
+            <span class="footer-stat-val warn" id="activeAlertCount">0</span>
+          </div>
+          <div class="footer-stat">
+            <span class="footer-stat-label">ML Models</span>
+            <span class="footer-stat-val" id="mlStatus">—</span>
+          </div>
+          <div class="footer-stat">
+            <span class="footer-stat-label">Baseline</span>
+            <span class="footer-stat-val" id="baselineStatus">—</span>
+          </div>
+          <div class="footer-stat divider">
+            <span class="footer-stat-label">Last Sync</span>
+            <span class="footer-stat-val muted" id="lastSync">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CONTENT ── -->
+    <div class="content">
+
+      <!-- METRIC STRIP -->
+      <div class="metric-strip">
+        <div class="metric-card">
+          <div class="metric-label"><span class="sensor-dot" style="background:#f97316"></span>VIBRATION</div>
+          <div class="metric-value" id="mv-vibration" style="color:#f97316">—</div>
+          <div class="metric-unit">mm/s</div>
+          <span class="metric-sigma" id="ms-vibration">σ —</span>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label"><span class="sensor-dot" style="background:#ef4444"></span>TEMPERATURE</div>
+          <div class="metric-value" id="mv-temperature" style="color:#ef4444">—</div>
+          <div class="metric-unit">°C</div>
+          <span class="metric-sigma" id="ms-temperature">σ —</span>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label"><span class="sensor-dot" style="background:#3b82f6"></span>RPM</div>
+          <div class="metric-value" id="mv-rpm" style="color:#3b82f6">—</div>
+          <div class="metric-unit">rev/min</div>
+          <span class="metric-sigma" id="ms-rpm">σ —</span>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label"><span class="sensor-dot" style="background:#10b981"></span>CURRENT</div>
+          <div class="metric-value" id="mv-current" style="color:#10b981">—</div>
+          <div class="metric-unit">amperes</div>
+          <span class="metric-sigma" id="ms-current">σ —</span>
+        </div>
+      </div>
+
+      <!-- RISK PANEL -->
+      <div class="risk-panel">
+        <div class="gauge-wrap">
+          <svg id="gaugesvg" width="150" height="110" viewBox="0 0 150 110">
+            <defs>
+              <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%"   stop-color="#10b981"/>
+                <stop offset="40%"  stop-color="#f59e0b"/>
+                <stop offset="70%"  stop-color="#f97316"/>
+                <stop offset="100%" stop-color="#ef4444"/>
+              </linearGradient>
+            </defs>
+            <path d="M18,96 A57,57 0 0,1 132,96" fill="none" stroke="#1e2330" stroke-width="13" stroke-linecap="round"/>
+            <path id="gaugeFill" d="M18,96 A57,57 0 0,1 132,96" fill="none" stroke="url(#gaugeGrad)" stroke-width="13" stroke-linecap="round" stroke-dasharray="0 179"/>
+            <text x="75" y="88"  text-anchor="middle" font-family="Space Mono" font-size="24" font-weight="700" fill="#94a3b8" id="gaugeScoreText">—</text>
+            <text x="75" y="104" text-anchor="middle" font-family="Space Mono" font-size="9"  fill="#475569">RISK SCORE</text>
+          </svg>
+        </div>
+
+        <div class="risk-details">
+          <div class="risk-title">Sensor Deviation from Baseline</div>
+          <div class="sensor-row">
+            <span class="sensor-name">vibration</span>
+            <div class="sensor-bar-bg"><div class="sensor-bar-fill" id="sbar-vibration" style="width:0%"></div></div>
+            <span class="sensor-val" id="sval-vibration">—</span>
+          </div>
+          <div class="sensor-row">
+            <span class="sensor-name">temperature</span>
+            <div class="sensor-bar-bg"><div class="sensor-bar-fill" id="sbar-temperature" style="width:0%"></div></div>
+            <span class="sensor-val" id="sval-temperature">—</span>
+          </div>
+          <div class="sensor-row">
+            <span class="sensor-name">rpm</span>
+            <div class="sensor-bar-bg"><div class="sensor-bar-fill" id="sbar-rpm" style="width:0%"></div></div>
+            <span class="sensor-val" id="sval-rpm">—</span>
+          </div>
+          <div class="sensor-row">
+            <span class="sensor-name">current</span>
+            <div class="sensor-bar-bg"><div class="sensor-bar-fill" id="sbar-current" style="width:0%"></div></div>
+            <span class="sensor-val" id="sval-current">—</span>
+          </div>
+        </div>
+
+        <div class="ml-box">
+          <div class="ml-label">ML MODEL</div>
+          <div class="ml-score" id="mlScore">—</div>
+          <div class="ml-sub">anomaly score</div>
+          <div class="ml-label" style="margin-top:12px;">LEVEL</div>
+          <div class="risk-pill" id="levelPill">—</div>
+          <div class="ml-label" style="margin-top:12px;">COMPOUND</div>
+          <div class="ml-score" id="compoundFlag" style="font-size:13px;color:#64748b">—</div>
+        </div>
+      </div>
+
+      <!-- TREND CHART -->
+      <div class="chart-panel">
+        <div class="chart-header">
+          <span class="chart-title" id="chartTitle">Select a machine</span>
+          <div class="chart-tabs">
+            <button class="chart-tab active" onclick="switchTab('vibration',this)">Vibration</button>
+            <button class="chart-tab" onclick="switchTab('temperature',this)">Temp</button>
+            <button class="chart-tab" onclick="switchTab('rpm',this)">RPM</button>
+            <button class="chart-tab" onclick="switchTab('current',this)">Current</button>
+          </div>
+        </div>
+        <div style="position:relative;width:100%;height:200px;">
+          <canvas id="trendChart" role="img" aria-label="Live sensor trend over time">Sensor trend data.</canvas>
+        </div>
+      </div>
+
+      <!-- BASELINE GRID -->
+      <div class="chart-panel">
+        <div class="chart-header">
+          <span class="chart-title">Adaptive Baseline — μ ± 2σ Envelope</span>
+          <span class="chart-tag" id="baselineTag">seeded</span>
+        </div>
+        <div class="baseline-grid" id="baselineGrid">
+          <div class="baseline-item" id="bl-vibration">
+            <div class="bl-sensor">Vibration (mm/s)</div>
+            <div class="bl-mean" id="bl-mean-vibration">—</div>
+            <div class="bl-range" id="bl-range-vibration">— · —</div>
+            <div class="bl-bar-bg">
+              <div class="bl-bar-envelope" id="bl-env-vibration"></div>
+              <div class="bl-bar-current"  id="bl-cur-vibration"></div>
+            </div>
+          </div>
+          <div class="baseline-item" id="bl-temperature">
+            <div class="bl-sensor">Temperature (°C)</div>
+            <div class="bl-mean" id="bl-mean-temperature">—</div>
+            <div class="bl-range" id="bl-range-temperature">— · —</div>
+            <div class="bl-bar-bg">
+              <div class="bl-bar-envelope" id="bl-env-temperature"></div>
+              <div class="bl-bar-current"  id="bl-cur-temperature"></div>
+            </div>
+          </div>
+          <div class="baseline-item" id="bl-rpm">
+            <div class="bl-sensor">RPM</div>
+            <div class="bl-mean" id="bl-mean-rpm">—</div>
+            <div class="bl-range" id="bl-range-rpm">— · —</div>
+            <div class="bl-bar-bg">
+              <div class="bl-bar-envelope" id="bl-env-rpm"></div>
+              <div class="bl-bar-current"  id="bl-cur-rpm"></div>
+            </div>
+          </div>
+          <div class="baseline-item" id="bl-current">
+            <div class="bl-sensor">Current (A)</div>
+            <div class="bl-mean" id="bl-mean-current">—</div>
+            <div class="bl-range" id="bl-range-current">— · —</div>
+            <div class="bl-bar-bg">
+              <div class="bl-bar-envelope" id="bl-env-current"></div>
+              <div class="bl-bar-current"  id="bl-cur-current"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+
+    <!-- ── RIGHT PANEL ── -->
+    <div class="alerts-panel">
+      <div class="alerts-header">
+        <div class="alerts-title">
+          Alerts
+          <span class="alert-count-badge" id="alertBadge">0</span>
+        </div>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);">SSE Live</span>
+      </div>
+
+      <div class="alerts-scroll" id="alertsContainer">
+        <div class="empty-alerts">
+          <div class="empty-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="9" r="7" stroke="#475569" stroke-width="1.5"/>
+              <path d="M9 6v4M9 12v.5" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="empty-text">No alerts yet.<br/>Waiting for data…</div>
+        </div>
+      </div>
+
+      <!-- WORK ORDERS -->
+      <div class="maintenance-section">
+        <div class="maint-header">Work Orders</div>
+        <div id="ticketsContainer">
+          <div class="empty-text" style="padding:8px 0;font-size:11px;">No tickets yet.</div>
+        </div>
+      </div>
+
+      <!-- FAILURE PATTERNS -->
+      <div class="maintenance-section" style="border-top:1px solid var(--border);">
+        <div class="maint-header">Failure Signature</div>
+        <div class="failure-box" id="failurePattern">Select a machine to view its known failure pattern.</div>
+      </div>
+
+      <!-- TRIGGERED SENSORS -->
+      <div class="maintenance-section" style="border-top:1px solid var(--border);">
+        <div class="maint-header">Triggered Sensors</div>
+        <div id="triggeredContainer" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--text-muted);">—</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script src="app.js"></script>
+</body>
+</html>
